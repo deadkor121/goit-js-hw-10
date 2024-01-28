@@ -38,20 +38,3 @@ form.addEventListener('submit', event => {
       });
     });
 });
-
-// function createPromis(delay, state) {
-//   console.log(state.toUpperCase());
-//   const promis = new Promise((resolv, reject) => {
-//     setTimeout(() => {
-//       if (state.toUpperCase() === 'FULFILLED') {
-//         iziToast.success({
-//           message: `Fulfilled promise in ${delay}ms`,
-//         });
-//       } else {
-//         iziToast.error({
-//           message: `Rejected promise in ${delay}ms`,
-//         });
-//       }
-//     }, delay);
-//   });
-// }
