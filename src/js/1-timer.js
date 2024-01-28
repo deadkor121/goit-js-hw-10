@@ -1,64 +1,72 @@
-import flatpickr from "flatpickr";
-import "flatpickr/dist/flatpickr.min.css";
-import iziToast from "izitoast";
+// Описаний в документації
+import flatpickr from 'flatpickr';
+// Додатковий імпорт стилів
+import 'flatpickr/dist/flatpickr.min.css';
+
+// Описаний у документації
+import iziToast from 'izitoast';
+// Додатковий імпорт стилів
 import 'izitoast/dist/css/iziToast.min.css';
 
-const inputPicker = document.querySelector('#datetime-picker');
-const buttonStart = document.querySelector('[data-start]');
-const daysTimer = document.querySelector('[data-days]');
-const hoursTimer = document.querySelector('[data-hours]');
-const minutesTimer = document.querySelector('[data-minutes]');
-const secondsTimer = document.querySelector('[data-seconds]');
-buttonStart.setAttribute('disabled', '');
-let userSelectedDate = null;
+const inputTimer = document.querySelector('#datetime-picker');
+const buttonTimer = document.querySelector('button[data-start]');
+const days = document.querySelector('span[data-days]');
+const hours = document.querySelector('span[data-hours]');
+const minutes = document.querySelector('span[data-minutes]');
+const seconds = document.querySelector('span[data-seconds]');
+
+let userSelectedDate;
+
 const options = {
   enableTime: true,
   time_24hr: true,
-  defaultDate: new Date(),
+  defaultDate: Date.now(),
   minuteIncrement: 1,
-    onClose(selectedDates) {
-        userSelectedDate = selectedDates[0].getTime();
-        buttonStart.removeAttribute('disabled');
-      if (userSelectedDate<Date.now()) {
-          buttonStart.setAttribute('disabled', '');
-          iziToast.error({
-              messageColor:'#FFF',
-              color:'#EF4040',
-              iconUrl: 'img/close.svg',
-              position: 'topRight',
-              message: 'Please choose a date in the future',
-});          
-}   
-}
+  onClose(selectedDates) {
+    userSelectedDate = selectedDates[0];
+    if (userSelectedDate < options.defaultDate) {
+      buttonTimer.setAttribute('disabled', '');
+      buttonTimer.setAttribute(
+        'style',
+        'background-color: #CFCFCF; color: #989898;'
+      );
+
+      iziToast.error({
+        message: 'Please choose a date in the future',
+      });
+    } else {
+      buttonTimer.removeAttribute('disabled');
+      buttonTimer.removeAttribute('style');
+      buttonTimer.addEventListener('click', activeTimer);
+    }
+  },
 };
 
-flatpickr(inputPicker, options);
+flatpickr('#datetime-picker', options);
 
+function activeTimer() {
+  inputTimer.setAttribute('disabled', '');
+  buttonTimer.setAttribute('disabled', '');
+  buttonTimer.setAttribute(
+    'style',
+    'background-color: #CFCFCF; color: #989898;'
+  );
+  let diffTime = userSelectedDate - options.defaultDate;
+  const secondInterval = setInterval(() => {
+    if (diffTime > 0) {
+      let newTimer = convertMs(diffTime);
 
-buttonStart.addEventListener('click', onClickStart)
+      days.textContent = `${addZero(newTimer.days)}`;
+      hours.textContent = `${addZero(newTimer.hours)}`;
+      minutes.textContent = `${addZero(newTimer.minutes)}`;
+      seconds.textContent = `${addZero(newTimer.seconds)}`;
 
-function onClickStart() {
-    const intervalId=setInterval(() => {
-    let timeToLeft = userSelectedDate-Date.now();
-        
-      if (timeToLeft<=0) {
-          clearInterval(intervalId);
-          buttonStart.setAttribute('disabled','');
-          iziToast.info({
-              position: 'center',
-              message: 'It is your time!',
-          });
-          return;
-        };
-        
-    const { days, hours, minutes, seconds } = convertMs(timeToLeft);
-    daysTimer.textContent = `${addLeadingZero(days)}`;
-    hoursTimer.textContent = `${addLeadingZero(hours)}`;
-    minutesTimer.textContent = `${addLeadingZero(minutes)}`;
-    secondsTimer.textContent = `${addLeadingZero(seconds)}`;
-    }, 1000);
+      diffTime -= 1000;
+    } else {
+      clearInterval(secondInterval);
+    }
+  }, 1000);
 }
-  
 
 function convertMs(ms) {
   // Number of milliseconds per unit of time
@@ -74,11 +82,11 @@ function convertMs(ms) {
   // Remaining minutes
   const minutes = Math.floor(((ms % day) % hour) / minute);
   // Remaining seconds
-    const seconds = Math.floor((((ms % day) % hour) % minute) / second);
-    return {days,hours,seconds,minutes};
-};
+  const seconds = Math.floor((((ms % day) % hour) % minute) / second);
 
-function addLeadingZero(value){
-return value.toString().padStart(2, '0'); 
+  return { days, hours, minutes, seconds };
 }
 
+function addZero(num) {
+  return num.toString().padStart(2, '0');
+}
